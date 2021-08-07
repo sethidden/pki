@@ -1,43 +1,50 @@
 <template>
-<div class="flex">
-  <span ref="publicKeyElement" :style="publicDragPosition">
-    <IconKey />
-    <IconGlobe />
-    Public key
-  </span>
-  <span ref="privateKeyElement" :style="privateDragPosition">
-    <IconKey />
-    <IconUserSecret />
-    Private key
-  </span>
+<div class="flex flex-row mb-10 w-100">
+  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10">
+    <span class="flex flex-row gap-1">
+      <IconKey />
+      <IconGlobe class="text-green-500" />
+      Public key
+    </span>
+  </KeyTile>
+  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10">
+    <span class="flex flex-row gap-1">
+      <IconKey />
+      <IconUserSecret />
+      Private key
+    </span>
+  </KeyTile>
 </div>
-<div ref="textElement">{{ textContent }}</div>
+<TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" class="z-0">
+  {{ text.content.value }}
+</TextTile>
 </template>
 
 <script setup lang="ts">
 import IconKey from 'virtual:vite-icons/fa-solid/key'
 import IconGlobe from 'virtual:vite-icons/fa-solid/globe'
 import IconUserSecret from 'virtual:vite-icons/fa-solid/user-secret'
+import KeyTile from './KeyTile.vue'
+import TextTile from './TextTile.vue'
 import {useMouseInElement, useMousePressed} from '@vueuse/core'
 import {useDragAndDrop} from '../logics/useDragAndDrop'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
-const publicKeyElement = ref(null)
-const privateKeyElement = ref(null)
-const textElement = ref(null)
-const textContent = ref('Hello World!')
+const publicKey = {
+  element: ref(null),
+  onCrypt: () => {text.content.value = '3ncrypt3d (with public)'},
+}
+const privateKey = {
+  element: ref(null),
+  onCrypt: () => {text.content.value = '3ncrypt3d (with private)'},
+}
+const text = {
+  element: ref(null),
+  content: ref('Hello World!'),
+}
 
-const {dragPosition: publicDragPosition} = useDragAndDrop(publicKeyElement, textElement, () => {textContent.value = '3ncrypt3d (with public)'} )
-const {dragPosition: privateDragPosition} = useDragAndDrop(privateKeyElement, textElement, () => (textContent.value = '3ncrypt3d (with private)') )
+const publicKeyDragger = useDragAndDrop(publicKey.element, text.element, publicKey.onCrypt )
+const privateKeyDragger = useDragAndDrop(privateKey.element, text.element, privateKey.onCrypt)
+
+const isAnyDragged = computed(() => [publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value].some(x=>x))
 </script>
-
-<style>
-* {
-  user-select: none;
-}
-.flex {
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-}
-</style>

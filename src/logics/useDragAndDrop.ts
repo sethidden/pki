@@ -11,6 +11,7 @@ export const useDragAndDrop = (dragged: Ref<unknown>, target: Ref<unknown>, onDr
       onDroppedInside();
     }
   })
-  return {dragPosition}
+
+  return {dragPosition, isDragging: pressed}
 
 }
