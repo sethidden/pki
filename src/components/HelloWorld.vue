@@ -16,7 +16,7 @@
   </KeyTile>
 </div>
 <TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" class="z-0">
-  {{ text.content.value }}
+  {{ content }}
 </TextTile>
 </template>
 
@@ -30,18 +30,35 @@ import {useMouseInElement, useMousePressed} from '@vueuse/core'
 import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
 
+type Encryptions = "public" | "private" | null
+
 const publicKey = {
   element: ref(null),
-  onCrypt: () => {text.content.value = '3ncrypt3d (with public)'},
+  onCrypt: () => {
+    text.encryptedWith.value = 'public';
+   },
 }
 const privateKey = {
   element: ref(null),
-  onCrypt: () => {text.content.value = '3ncrypt3d (with private)'},
+  onCrypt: () => {
+    text.encryptedWith.value = 'private';
+  },
 }
 const text = {
   element: ref(null),
-  content: ref('Hello World!'),
+  encryptedWith: ref<Encryptions>(null),
 }
+const initialText = "Hello world!"
+
+const mapEncryptionToMessage = new Map<Encryptions, string>([
+  ['public', 'encrypted (with public)'],
+  ['private', 'encrypted (with private)'],
+  [null, initialText]
+])
+const content = computed(() => {
+  const value = mapEncryptionToMessage.get(text.encryptedWith.value);
+  return value;
+})
 
 const publicKeyDragger = useDragAndDrop(publicKey.element, text.element, publicKey.onCrypt )
 const privateKeyDragger = useDragAndDrop(privateKey.element, text.element, privateKey.onCrypt)
