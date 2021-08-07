@@ -1,13 +1,13 @@
 <template>
 <div class="flex flex-row mb-10 w-100">
-  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10" :title="pair.public">
+  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconGlobe class="text-green-500" />
       Public key
     </span>
   </KeyTile>
-  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10" :title="pair.private">
+  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconUserSecret />
@@ -18,6 +18,7 @@
 <TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" :encrypted="isEncrypted" class="z-0">
   {{ content }}
 </TextTile>
+{{encrypted}}
 </template>
 
 <script setup lang="ts">
@@ -30,10 +31,16 @@ import {useMouseInElement, useMousePressed} from '@vueuse/core'
 import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
 import keypair from 'keypair'
+import forge from 'node-forge';
 
 type Encryptions = "public" | "private" | null
 
-const pair = keypair();
+const keys = keypair();
+const rsa = forge.pki.rsa;
+const rsa_public = forge.pki.publicKeyFromPem(keys.public)
+const rsa_private = forge.pki.privateKeyFromPem(keys.private)
+
+const encrypted = rsa_public.encrypt('Hello world!')
 
 const publicKey = {
   element: ref(null),
