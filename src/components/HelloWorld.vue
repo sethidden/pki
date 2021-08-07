@@ -1,13 +1,13 @@
 <template>
 <div class="flex flex-row mb-10 w-100">
-  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10">
+  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10" :title="pair.public">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconGlobe class="text-green-500" />
       Public key
     </span>
   </KeyTile>
-  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10">
+  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10" :title="pair.private">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconUserSecret />
@@ -15,7 +15,7 @@
     </span>
   </KeyTile>
 </div>
-<TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" class="z-0">
+<TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" :encrypted="isEncrypted" class="z-0">
   {{ content }}
 </TextTile>
 </template>
@@ -29,8 +29,11 @@ import TextTile from './TextTile.vue'
 import {useMouseInElement, useMousePressed} from '@vueuse/core'
 import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
+import keypair from 'keypair'
 
 type Encryptions = "public" | "private" | null
+
+const pair = keypair();
 
 const publicKey = {
   element: ref(null),
@@ -48,6 +51,7 @@ const text = {
   element: ref(null),
   encryptedWith: ref<Encryptions>(null),
 }
+const isEncrypted = computed(() => text.encryptedWith.value !== null)
 const initialText = "Hello world!"
 
 const mapEncryptionToMessage = new Map<Encryptions, string>([

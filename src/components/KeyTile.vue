@@ -2,8 +2,6 @@
   <span 
     ref="publicKeyElement" 
     class="
-      flex
-      flex-row
       border-2 
       p-2
       bg-white

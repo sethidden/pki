@@ -12,16 +12,15 @@
     "
     :class="props.attention ? ['bg-red-200 animate-pulse'] : ['']"
   >
-    <component :is="encrypted ? 'IconLock' : 'IconUnlockAlt'"/>
+    <component :is="encrypted ? IconLock : IconUnlockAlt"/>
     <slot/>
   </span>
  
 </template>
 
 <script setup>
-import IconUnlockAlt from 'virtual:vite-icons/fa-solid/unlock-alt'
 import IconLock from 'virtual:vite-icons/fa-solid/lock'
-import {defineProps} from 'vue'
+import IconUnlockAlt from 'virtual:vite-icons/fa-solid/unlock-alt'
 const props = defineProps({
   attention: Boolean,
   encrypted: Boolean,
