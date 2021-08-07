@@ -18,7 +18,6 @@
 <TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" :encrypted="isEncrypted" class="z-0">
   {{ content }}
 </TextTile>
-{{encrypted}}
 </template>
 
 <script setup lang="ts">
@@ -36,22 +35,31 @@ import forge from 'node-forge';
 type Encryptions = "public" | "private" | null
 
 const keys = keypair();
-const rsa = forge.pki.rsa;
 const rsa_public = forge.pki.publicKeyFromPem(keys.public)
 const rsa_private = forge.pki.privateKeyFromPem(keys.private)
-
-const encrypted = rsa_public.encrypt('Hello world!')
 
 const publicKey = {
   element: ref(null),
   onCrypt: () => {
-    text.encryptedWith.value = 'public';
+    //this is just moronic, but I just want to see the basic premise of the app work
+    // TODO: Actually decrypt instead of storing the plaintext in initialText
+    const currentEncryptionState = text.encryptedWith;
+    if(currentEncryptionState.value === 'private') {
+      currentEncryptionState.value = null;
+    } else {
+      currentEncryptionState.value = 'public';
+    }
    },
 }
 const privateKey = {
   element: ref(null),
   onCrypt: () => {
-    text.encryptedWith.value = 'private';
+    const currentEncryptionState = text.encryptedWith;
+    if(currentEncryptionState.value === 'public') {
+      currentEncryptionState.value = null;
+    } else {
+      currentEncryptionState.value = 'private';
+    }
   },
 }
 const text = {
@@ -60,13 +68,22 @@ const text = {
 }
 const isEncrypted = computed(() => text.encryptedWith.value !== null)
 const initialText = "Hello world!"
-
-const mapEncryptionToMessage = new Map<Encryptions, string>([
-  ['public', 'encrypted (with public)'],
-  ['private', 'encrypted (with private)'],
-  [null, initialText]
-])
 const content = computed(() => {
+
+  //lmao WHAT
+  const messageDigest = forge.md.sha256.create();
+  messageDigest.update(initialText, 'utf8')
+
+  const mapEncryptionToMessage = new Map<Encryptions, string>([
+    //encrypt with private key = sign, though "encrypt with private key" is an oxymoron
+    ['private', rsa_private.sign(messageDigest)],
+    // holy shit, encrypting several times with the same plaintext
+    // and the same public key generates different ciphertext
+    // for each try
+    // https://crypto.stackexchange.com/questions/26249/why-are-rsa-ciphertexts-different-for-the-same-plaintext?newreg=2e75fccbf99b4399829892ed1d66ed77
+    ['public', rsa_public.encrypt(initialText)],
+    [null, initialText]
+  ])
   const value = mapEncryptionToMessage.get(text.encryptedWith.value);
   return value;
 })
