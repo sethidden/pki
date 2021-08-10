@@ -2,10 +2,10 @@
   <span 
     ref="publicKeyElement" 
     class="
-      border-2 
-      p-2
       bg-white
       bg-opacity-75
+      border-2 
+      p-2
       cursor-pointer
       hover:border-red-500
     "
