@@ -31,7 +31,7 @@ import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
 import keypair from 'keypair'
 import forge from 'node-forge';
-import _ from 'lodash-es'
+import * as R from 'ramda'
 
 type Key = 'public' | 'private'
 type Encryptions = "withPublic" | "withPrivate" | "plain"
@@ -40,36 +40,33 @@ const keys = keypair();
 const rsa_public = forge.pki.publicKeyFromPem(keys.public)
 const rsa_private = forge.pki.privateKeyFromPem(keys.private)
 
-const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions) => {
-  const map : {input: [Key, Encryptions], output: Encryptions}[] = [
-    {
-      input: ['public', 'plain'], 
-      output: 'withPublic'
-    },
-    {
-      input: ['public', 'withPublic'], 
-      output: 'withPublic'
-    },
-    {
-      input: ['public', 'withPrivate'], 
-      output: 'plain'
-    },
-    {
-      input: ['private', 'plain'], 
-      output: 'withPrivate'
-    },
-    {
-      input: ['private', 'withPublic'], 
-      output: 'plain'
-    },
-    {
-      input: ['private', 'withPrivate'], 
-      output: 'withPrivate'
-    },
-  ]
-
-  return map.find(input => _.isEqual(input, [appliedKey, currentEncryptionState]))!.output;
-}
+const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions) => 
+  R.cond<any, Encryptions>([
+    [
+      R.equals(['public', 'plain']),
+      R.always('withPublic')
+    ],
+    [
+      R.equals(['public', 'withPublic']), 
+      R.always('withPublic')
+    ],
+    [
+      R.equals(['public', 'withPrivate']), 
+      R.always('plain')
+    ],
+    [
+      R.equals(['private', 'plain']), 
+      R.always('withPrivate')
+    ],
+    [
+      R.equals(['private', 'withPublic']), 
+      R.always('plain')
+    ],
+    [
+      R.equals(['private', 'withPrivate']), 
+      R.always('withPrivate')
+    ],
+  ])([appliedKey, currentEncryptionState]);
 
 const publicKey = {
   element: ref(null),
@@ -77,7 +74,6 @@ const publicKey = {
 const privateKey = {
   element: ref(null),
 }
-const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
 
 const text = {
   element: ref(null),
@@ -85,6 +81,7 @@ const text = {
 }
 const initialText = "Hello world!"
 const content = computed(() => {
+const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
 
   //lmao WHAT
   const messageDigest = forge.md.sha256.create();
@@ -104,7 +101,7 @@ const content = computed(() => {
   return value;
 })
 
-const onDragAndDropOnText = _.curry(useDragAndDrop)(text.element);
+const onDragAndDropOnText = R.curry(useDragAndDrop)(text.element);
 const publicKeyDragger = 
   onDragAndDropOnText
     (publicKey.element, () => {text.encryptedWith.value = getEncryptionState('public', text.encryptedWith.value)});
