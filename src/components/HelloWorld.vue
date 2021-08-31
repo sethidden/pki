@@ -79,19 +79,19 @@ const privateKey = {
 const text = {
   element: ref(null),
   encryptedWith: ref<Encryptions>('plain'),
+  initial: 'Hello world!'
 }
-const initialText = "Hello world!"
 
 const isEncrypted = computed(() => text.encryptedWith.value !== 'plain');
 
 const content = computed(() => {
   const messageDigest = forge.md.sha256.create();
-  messageDigest.update(initialText, 'utf8')
+  messageDigest.update(text.initial, 'utf8')
 
   return R.cond<any, any>([
     [R.equals('withPrivate'), R.always(privateKey.rsa.sign(messageDigest))],
-    [R.equals('withPublic'), R.always(publicKey.rsa.encrypt(initialText))],
-    [R.equals('plain'), R.always(initialText)]
+    [R.equals('withPublic'), R.always(publicKey.rsa.encrypt(text.initial))],
+    [R.equals('plain'), R.always(text.initial)]
   ])(text.encryptedWith.value);
 })
 
@@ -104,5 +104,5 @@ const publicKeyDragger =
 const privateKeyDragger = 
   onDragAndDropOnText(privateKey.element, setEncryptedValue('private'))
 
-const isAnyDragged = computed(() => [publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value].some(x=>x))
+const isAnyDragged = computed(() => R.all(R.equals(true))([publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value]));
 </script>
