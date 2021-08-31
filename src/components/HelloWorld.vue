@@ -36,9 +36,6 @@ import * as R from 'ramda'
 type Key = 'public' | 'private'
 type Encryptions = "withPublic" | "withPrivate" | "plain"
 
-const keys = keypair();
-const rsa_public = forge.pki.publicKeyFromPem(keys.public)
-const rsa_private = forge.pki.privateKeyFromPem(keys.private)
 
 const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions) => 
   R.cond<any, Encryptions>([
@@ -68,11 +65,15 @@ const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions
     ],
   ])([appliedKey, currentEncryptionState]);
 
+const keys = keypair();
+
 const publicKey = {
   element: ref(null),
+  rsa: forge.pki.publicKeyFromPem(keys.public),
 }
 const privateKey = {
   element: ref(null),
+  rsa: forge.pki.privateKeyFromPem(keys.private),
 }
 
 const text = {
@@ -80,25 +81,18 @@ const text = {
   encryptedWith: ref<Encryptions>('plain'),
 }
 const initialText = "Hello world!"
-const content = computed(() => {
-const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
 
-  //lmao WHAT
+const isEncrypted = computed(() => text.encryptedWith.value !== 'plain');
+
+const content = computed(() => {
   const messageDigest = forge.md.sha256.create();
   messageDigest.update(initialText, 'utf8')
 
-  const mapEncryptionToMessage = new Map<Encryptions, string>([
-    //encrypt with private key = sign, though "encrypt with private key" is an oxymoron
-    ['withPrivate', rsa_private.sign(messageDigest)],
-    // holy shit, encrypting several times with the same plaintext
-    // and the same public key generates different ciphertext
-    // for each try
-    // https://crypto.stackexchange.com/questions/26249/why-are-rsa-ciphertexts-different-for-the-same-plaintext?newreg=2e75fccbf99b4399829892ed1d66ed77
-    ['withPublic', rsa_public.encrypt(initialText)],
-    ['plain', initialText]
-  ])
-  const value = mapEncryptionToMessage.get(text.encryptedWith.value);
-  return value;
+  return R.cond<any, any>([
+    [R.equals('withPrivate'), R.always(privateKey.rsa.sign(messageDigest))],
+    [R.equals('withPublic'), R.always(publicKey.rsa.encrypt(initialText))],
+    [R.equals('plain'), R.always(initialText)]
+  ])(text.encryptedWith.value);
 })
 
 const onDragAndDropOnText = R.curry(useDragAndDrop)(text.element);
