@@ -31,42 +31,57 @@ import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
 import keypair from 'keypair'
 import forge from 'node-forge';
+import _ from 'lodash-es'
 
-type Encryptions = "public" | "private" | null
+type Key = 'public' | 'private'
+type Encryptions = "withPublic" | "withPrivate" | "plain"
 
 const keys = keypair();
 const rsa_public = forge.pki.publicKeyFromPem(keys.public)
 const rsa_private = forge.pki.privateKeyFromPem(keys.private)
 
+const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions) => {
+  const map : {input: [Key, Encryptions], output: Encryptions}[] = [
+    {
+      input: ['public', 'plain'], 
+      output: 'withPublic'
+    },
+    {
+      input: ['public', 'withPublic'], 
+      output: 'withPublic'
+    },
+    {
+      input: ['public', 'withPrivate'], 
+      output: 'plain'
+    },
+    {
+      input: ['private', 'plain'], 
+      output: 'withPrivate'
+    },
+    {
+      input: ['private', 'withPublic'], 
+      output: 'plain'
+    },
+    {
+      input: ['private', 'withPrivate'], 
+      output: 'withPrivate'
+    },
+  ]
+
+  return map.find(input => _.isEqual(input, [appliedKey, currentEncryptionState]))!.output;
+}
+
 const publicKey = {
   element: ref(null),
-  onCrypt: () => {
-    //this is just moronic, but I just want to see the basic premise of the app work
-    // TODO: Actually decrypt instead of storing the plaintext in initialText
-    const currentEncryptionState = text.encryptedWith;
-    if(currentEncryptionState.value === 'private') {
-      currentEncryptionState.value = null;
-    } else {
-      currentEncryptionState.value = 'public';
-    }
-   },
 }
 const privateKey = {
   element: ref(null),
-  onCrypt: () => {
-    const currentEncryptionState = text.encryptedWith;
-    if(currentEncryptionState.value === 'public') {
-      currentEncryptionState.value = null;
-    } else {
-      currentEncryptionState.value = 'private';
-    }
-  },
 }
 const text = {
   element: ref(null),
-  encryptedWith: ref<Encryptions>(null),
+  encryptedWith: ref<Encryptions>('plain'),
 }
-const isEncrypted = computed(() => text.encryptedWith.value !== null)
+const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
 const initialText = "Hello world!"
 const content = computed(() => {
 
@@ -76,20 +91,29 @@ const content = computed(() => {
 
   const mapEncryptionToMessage = new Map<Encryptions, string>([
     //encrypt with private key = sign, though "encrypt with private key" is an oxymoron
-    ['private', rsa_private.sign(messageDigest)],
+    ['withPrivate', rsa_private.sign(messageDigest)],
     // holy shit, encrypting several times with the same plaintext
     // and the same public key generates different ciphertext
     // for each try
     // https://crypto.stackexchange.com/questions/26249/why-are-rsa-ciphertexts-different-for-the-same-plaintext?newreg=2e75fccbf99b4399829892ed1d66ed77
-    ['public', rsa_public.encrypt(initialText)],
-    [null, initialText]
+    ['withPublic', rsa_public.encrypt(initialText)],
+    ['plain', initialText]
   ])
   const value = mapEncryptionToMessage.get(text.encryptedWith.value);
   return value;
 })
 
-const publicKeyDragger = useDragAndDrop(publicKey.element, text.element, publicKey.onCrypt )
-const privateKeyDragger = useDragAndDrop(privateKey.element, text.element, privateKey.onCrypt)
+const publicKeyDragger = useDragAndDrop(
+  publicKey.element, 
+  text.element, 
+  () => {text.encryptedWith.value = getEncryptionState('public', text.encryptedWith.value)}
+);
+
+const privateKeyDragger = useDragAndDrop(
+  privateKey.element, 
+  text.element, 
+  () => {text.encryptedWith.value = getEncryptionState('private', text.encryptedWith.value)}
+)
 
 const isAnyDragged = computed(() => [publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value].some(x=>x))
 </script>
