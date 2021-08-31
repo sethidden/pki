@@ -96,13 +96,13 @@ const content = computed(() => {
 })
 
 const onDragAndDropOnText = R.curry(useDragAndDrop)(text.element);
+const setEncryptedValue = (key: Key) => () => {text.encryptedWith.value = getEncryptionState(key, text.encryptedWith.value)}
+
 const publicKeyDragger = 
-  onDragAndDropOnText
-    (publicKey.element, () => {text.encryptedWith.value = getEncryptionState('public', text.encryptedWith.value)});
+  onDragAndDropOnText(publicKey.element, setEncryptedValue('public'));
 
 const privateKeyDragger = 
-  onDragAndDropOnText
-    (privateKey.element, () => {text.encryptedWith.value = getEncryptionState('private', text.encryptedWith.value)})
+  onDragAndDropOnText(privateKey.element, setEncryptedValue('private'))
 
 const isAnyDragged = computed(() => [publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value].some(x=>x))
 </script>
