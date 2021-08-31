@@ -77,11 +77,12 @@ const publicKey = {
 const privateKey = {
   element: ref(null),
 }
+const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
+
 const text = {
   element: ref(null),
   encryptedWith: ref<Encryptions>('plain'),
 }
-const isEncrypted = computed(() => text.encryptedWith.value !== 'plain')
 const initialText = "Hello world!"
 const content = computed(() => {
 
@@ -103,17 +104,14 @@ const content = computed(() => {
   return value;
 })
 
-const publicKeyDragger = useDragAndDrop(
-  publicKey.element, 
-  text.element, 
-  () => {text.encryptedWith.value = getEncryptionState('public', text.encryptedWith.value)}
-);
+const onDragAndDropOnText = _.curry(useDragAndDrop)(text.element);
+const publicKeyDragger = 
+  onDragAndDropOnText
+    (publicKey.element, () => {text.encryptedWith.value = getEncryptionState('public', text.encryptedWith.value)});
 
-const privateKeyDragger = useDragAndDrop(
-  privateKey.element, 
-  text.element, 
-  () => {text.encryptedWith.value = getEncryptionState('private', text.encryptedWith.value)}
-)
+const privateKeyDragger = 
+  onDragAndDropOnText
+    (privateKey.element, () => {text.encryptedWith.value = getEncryptionState('private', text.encryptedWith.value)})
 
 const isAnyDragged = computed(() => [publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value].some(x=>x))
 </script>
