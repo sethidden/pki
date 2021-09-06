@@ -77,15 +77,8 @@ class Keypair {
     this.#privateRsa = forge.pki.privateKeyFromPem(keypair.private);
   }
 
-  get public() {
-    return this.#keypair.public;
-  }
   get publicKeyRsa() {
     return this.#publicRsa;
-  }
-
-  get private() {
-    return this.#keypair.private;
   }
 
   get privateKeyRsa() {
