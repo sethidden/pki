@@ -15,8 +15,8 @@
     </span>
   </KeyTile>
 </div>
-<TextTile ref="textElement" :attention="isAnyDragged" :encrypted="_textCompos.isEncrypted.value" class="z-0">
-  {{ _textCompos.content }}
+<TextTile ref="textElement" :attention="isAnyDragged" :encrypted="text.isEncrypted.value" class="z-0">
+  {{ text.content }}
 </TextTile>
 </template>
 
@@ -110,12 +110,12 @@ const textLogic = () => {
   }
 }
 
-const _textCompos = textLogic();
+const text = textLogic();
 
 const textElement = ref<Element | null>(null);
 
 const onDragAndDropOnText = R.curry(useDragAndDrop)(textElement);
-const setEncryptedValue = (key: Key) => () => {_textCompos.encryptedWith.value = getEncryptionState(key, _textCompos.encryptedWith.value)}
+const setEncryptedValue = (key: Key) => () => {text.encryptedWith.value = getEncryptionState(key, text.encryptedWith.value)}
 
 const publicKeyDragger = 
 onDragAndDropOnText(publicKeyElement, setEncryptedValue('public'));
