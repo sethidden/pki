@@ -29,7 +29,7 @@ import TextTile from './TextTile.vue'
 import {useMouseInElement, useMousePressed} from '@vueuse/core'
 import {useDragAndDrop} from '../logics/useDragAndDrop'
 import { computed, ref } from 'vue'
-import keypair from 'keypair'
+import keypair, {KeypairResults} from 'keypair'
 import forge from 'node-forge';
 import * as R from 'ramda'
 
@@ -65,15 +65,29 @@ const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions
     ],
   ])([appliedKey, currentEncryptionState]);
 
-const keys = keypair();
+class Keypair {
+  #keypair : KeypairResults;
+  constructor(keypair: KeypairResults) {
+    this.#keypair = keypair; 
+  }
+  get public() {
+    return this.#keypair.public;
+  }
+
+  get private() {
+    return this.#keypair.private;
+  }
+}
+
+const kp = new Keypair(keypair());
 
 const publicKey = {
   element: ref(null),
-  rsa: forge.pki.publicKeyFromPem(keys.public),
+  rsa: forge.pki.publicKeyFromPem(kp.public),
 }
 const privateKey = {
   element: ref(null),
-  rsa: forge.pki.privateKeyFromPem(keys.private),
+  rsa: forge.pki.privateKeyFromPem(kp.private),
 }
 
 const text = {
