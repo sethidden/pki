@@ -92,10 +92,8 @@ const textLogic = () => {
   const initial = 'Hello world!'
   const encryptedWith = ref<Encryptions>('plain');
   const isEncrypted = computed(() => encryptedWith.value !== 'plain');
+  const messageDigest = forge.md.sha256.create().update(initial, 'utf8');
   const content = computed(() => {
-      const messageDigest = forge.md.sha256.create();
-      messageDigest.update(initial, 'utf8')
-
       return R.cond<any, any>([
           [R.equals('withPrivate'), R.always(kp.privateKeyRsa.sign(messageDigest))],
           [R.equals('withPublic'), R.always(kp.publicKeyRsa.encrypt(initial))],
