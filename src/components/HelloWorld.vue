@@ -67,12 +67,10 @@ const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions
   ])([appliedKey, currentEncryptionState]);
 
 class Keypair {
-  #keypair : KeypairResults;
   #privateRsa : forge.pki.rsa.PrivateKey;
   #publicRsa : forge.pki.rsa.PublicKey;
 
   constructor(keypair: KeypairResults) {
-    this.#keypair = keypair; 
     this.#publicRsa = forge.pki.publicKeyFromPem(keypair.public);
     this.#privateRsa = forge.pki.privateKeyFromPem(keypair.private);
   }
@@ -90,11 +88,9 @@ const kp = new Keypair(keypair());
 
 const publicKey = {
   element: ref(null),
-  rsa: kp.publicKeyRsa,
 }
 const privateKey = {
   element: ref(null),
-  rsa: kp.privateKeyRsa,
 }
 
 const text = {
