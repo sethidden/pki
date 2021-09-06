@@ -1,13 +1,13 @@
 <template>
 <div class="flex flex-row mb-10 w-100">
-  <KeyTile :ref="el => publicKey.element.value = el" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10">
+  <KeyTile ref="publicKeyElement" :style="publicKeyDragger.dragPosition.value" class="mr-auto select-none z-10">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconGlobe class="text-green-500" />
       Public key
     </span>
   </KeyTile>
-  <KeyTile :ref="el => privateKey.element.value = el" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10">
+  <KeyTile ref="privateKeyElement" :style="privateKeyDragger.dragPosition.value" class="ml-auto select-none z-10">
     <span class="flex flex-row gap-1">
       <IconKey />
       <IconUserSecret />
@@ -85,13 +85,8 @@ class Keypair {
 }
 
 const kp = new Keypair(keypair());
-
-const publicKey = {
-  element: ref(null),
-}
-const privateKey = {
-  element: ref(null),
-}
+const publicKeyElement = ref(null);
+const privateKeyElement = ref(null);
 
 const text = {
   element: ref(null),
@@ -116,10 +111,10 @@ const onDragAndDropOnText = R.curry(useDragAndDrop)(text.element);
 const setEncryptedValue = (key: Key) => () => {text.encryptedWith.value = getEncryptionState(key, text.encryptedWith.value)}
 
 const publicKeyDragger = 
-  onDragAndDropOnText(publicKey.element, setEncryptedValue('public'));
+  onDragAndDropOnText(publicKeyElement, setEncryptedValue('public'));
 
 const privateKeyDragger = 
-  onDragAndDropOnText(privateKey.element, setEncryptedValue('private'))
+  onDragAndDropOnText(privateKeyElement, setEncryptedValue('private'))
 
 const isAnyDragged = computed(() => R.all(R.equals(true))([publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value]));
 </script>
