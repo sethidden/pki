@@ -33,6 +33,7 @@ import keypair, {KeypairResults} from 'keypair'
 import forge from 'node-forge';
 import * as R from 'ramda'
 
+
 type Key = 'public' | 'private'
 type Encryptions = "withPublic" | "withPrivate" | "plain"
 
@@ -67,15 +68,26 @@ const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions
 
 class Keypair {
   #keypair : KeypairResults;
+  #privateRsa : forge.pki.rsa.PrivateKey;
+  #publicRsa : forge.pki.rsa.PublicKey;
   constructor(keypair: KeypairResults) {
     this.#keypair = keypair; 
+    this.#publicRsa = forge.pki.publicKeyFromPem(keypair.public);
+    this.#privateRsa = forge.pki.privateKeyFromPem(keypair.private);
   }
   get public() {
     return this.#keypair.public;
   }
+  get publicKeyRsa() {
+    return this.#publicRsa;
+  }
 
   get private() {
     return this.#keypair.private;
+  }
+
+  get privateKeyRs() {
+    return this.#privateRsa;
   }
 }
 
