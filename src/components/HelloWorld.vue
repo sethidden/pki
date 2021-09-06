@@ -70,11 +70,13 @@ class Keypair {
   #keypair : KeypairResults;
   #privateRsa : forge.pki.rsa.PrivateKey;
   #publicRsa : forge.pki.rsa.PublicKey;
+
   constructor(keypair: KeypairResults) {
     this.#keypair = keypair; 
     this.#publicRsa = forge.pki.publicKeyFromPem(keypair.public);
     this.#privateRsa = forge.pki.privateKeyFromPem(keypair.private);
   }
+
   get public() {
     return this.#keypair.public;
   }
@@ -86,7 +88,7 @@ class Keypair {
     return this.#keypair.private;
   }
 
-  get privateKeyRs() {
+  get privateKeyRsa() {
     return this.#privateRsa;
   }
 }
@@ -95,11 +97,11 @@ const kp = new Keypair(keypair());
 
 const publicKey = {
   element: ref(null),
-  rsa: forge.pki.publicKeyFromPem(kp.public),
+  rsa: kp.publicKeyRsa,
 }
 const privateKey = {
   element: ref(null),
-  rsa: forge.pki.privateKeyFromPem(kp.private),
+  rsa: kp.privateKeyRsa,
 }
 
 const text = {
@@ -115,8 +117,8 @@ const content = computed(() => {
   messageDigest.update(text.initial, 'utf8')
 
   return R.cond<any, any>([
-    [R.equals('withPrivate'), R.always(privateKey.rsa.sign(messageDigest))],
-    [R.equals('withPublic'), R.always(publicKey.rsa.encrypt(text.initial))],
+    [R.equals('withPrivate'), R.always(kp.privateKeyRsa.sign(messageDigest))],
+    [R.equals('withPublic'), R.always(kp.publicKeyRsa.encrypt(text.initial))],
     [R.equals('plain'), R.always(text.initial)]
   ])(text.encryptedWith.value);
 })
