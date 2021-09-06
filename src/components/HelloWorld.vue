@@ -88,7 +88,7 @@ const kp = new Keypair(keypair());
 const publicKeyElement = ref(null);
 const privateKeyElement = ref(null);
 
-const textCompos = () => {
+const textLogic = () => {
   const initial = 'Hello world!'
   const encryptedWith = ref<Encryptions>('plain');
   const isEncrypted = computed(() => encryptedWith.value !== 'plain');
@@ -110,7 +110,7 @@ const textCompos = () => {
   }
 }
 
-const _textCompos = textCompos();
+const _textCompos = textLogic();
 
 const textElement = ref<Element | null>(null);
 
