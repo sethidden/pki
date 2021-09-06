@@ -15,8 +15,8 @@
     </span>
   </KeyTile>
 </div>
-<TextTile :ref="el => text.element.value = el" :attention="isAnyDragged" :encrypted="isEncrypted" class="z-0">
-  {{ content }}
+<TextTile ref="textElement" :attention="isAnyDragged" :encrypted="_textCompos.isEncrypted.value" class="z-0">
+  {{ _textCompos.content }}
 </TextTile>
 </template>
 
@@ -88,33 +88,40 @@ const kp = new Keypair(keypair());
 const publicKeyElement = ref(null);
 const privateKeyElement = ref(null);
 
-const text = {
-  element: ref(null),
-  encryptedWith: ref<Encryptions>('plain'),
-  initial: 'Hello world!'
+const textCompos = () => {
+  const initial = 'Hello world!'
+  const encryptedWith = ref<Encryptions>('plain');
+  const isEncrypted = computed(() => encryptedWith.value !== 'plain');
+  const content = computed(() => {
+      const messageDigest = forge.md.sha256.create();
+      messageDigest.update(initial, 'utf8')
+
+      return R.cond<any, any>([
+          [R.equals('withPrivate'), R.always(kp.privateKeyRsa.sign(messageDigest))],
+          [R.equals('withPublic'), R.always(kp.publicKeyRsa.encrypt(initial))],
+          [R.equals('plain'), R.always(initial)]
+      ])(encryptedWith.value);
+      })
+
+  return {
+    encryptedWith,
+    isEncrypted,
+    content,
+  }
 }
 
-const isEncrypted = computed(() => text.encryptedWith.value !== 'plain');
+const _textCompos = textCompos();
 
-const content = computed(() => {
-  const messageDigest = forge.md.sha256.create();
-  messageDigest.update(text.initial, 'utf8')
+const textElement = ref<Element | null>(null);
 
-  return R.cond<any, any>([
-    [R.equals('withPrivate'), R.always(kp.privateKeyRsa.sign(messageDigest))],
-    [R.equals('withPublic'), R.always(kp.publicKeyRsa.encrypt(text.initial))],
-    [R.equals('plain'), R.always(text.initial)]
-  ])(text.encryptedWith.value);
-})
-
-const onDragAndDropOnText = R.curry(useDragAndDrop)(text.element);
-const setEncryptedValue = (key: Key) => () => {text.encryptedWith.value = getEncryptionState(key, text.encryptedWith.value)}
+const onDragAndDropOnText = R.curry(useDragAndDrop)(textElement);
+const setEncryptedValue = (key: Key) => () => {_textCompos.encryptedWith.value = getEncryptionState(key, _textCompos.encryptedWith.value)}
 
 const publicKeyDragger = 
-  onDragAndDropOnText(publicKeyElement, setEncryptedValue('public'));
+onDragAndDropOnText(publicKeyElement, setEncryptedValue('public'));
 
 const privateKeyDragger = 
-  onDragAndDropOnText(privateKeyElement, setEncryptedValue('private'))
+onDragAndDropOnText(privateKeyElement, setEncryptedValue('private'))
 
 const isAnyDragged = computed(() => R.all(R.equals(true))([publicKeyDragger.isDragging.value , privateKeyDragger.isDragging.value]));
 </script>
