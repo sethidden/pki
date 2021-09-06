@@ -38,6 +38,7 @@ type Key = 'public' | 'private'
 type Encryptions = "withPublic" | "withPrivate" | "plain"
 
 
+//Extract Conditional to Polymorphism?
 const getEncryptionState = (appliedKey: Key, currentEncryptionState: Encryptions) => 
   R.cond<any, Encryptions>([
     [
